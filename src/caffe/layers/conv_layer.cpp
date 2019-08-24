@@ -1,5 +1,6 @@
 #include <vector>
 
+#include "caffe/util/tvgen.hpp"
 #include "caffe/layers/conv_layer.hpp"
 
 namespace caffe {
@@ -24,10 +25,43 @@ void ConvolutionLayer<Dtype>::compute_output_shape() {
 template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+
+#ifdef TVGEN_EN
+  std::ofstream tvi, tvw, tvb, tvo;
+  string tvi_fname = "tv_" + this->layer_param().name() + "_i.dat";
+  string tvw_fname = "tv_" + this->layer_param().name() + "_w.dat";
+  string tvb_fname = "tv_" + this->layer_param().name() + "_b.dat";
+  string tvo_fname = "tv_" + this->layer_param().name() + "_o.dat";
+  tvi.open( tvi_fname.c_str(), std::ios::binary );
+  tvw.open( tvw_fname.c_str(), std::ios::binary );
+  tvb.open( tvb_fname.c_str(), std::ios::binary );
+  tvo.open( tvo_fname.c_str(), std::ios::binary );
+  //tvgen << "name = " << this->layer_param().name() << "\n";
+  //tvgen << "num_ = " << this->num_ << "\n";
+  //tvgen << "bottom_dim_ = " << this->bottom_dim_ << "\n";
+  //tvgen << "top_dim     = " << this->top_dim_ << "\n";
+#endif
+
   const Dtype* weight = this->blobs_[0]->cpu_data();
   for (int i = 0; i < bottom.size(); ++i) {
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
+
+#ifdef TVGEN_EN
+    {
+      // IFM data dump
+      const Dtype* bottom_data = bottom[i]->cpu_data();
+      const Dtype* weight_data = this->blobs_[0]->cpu_data();
+      tvi.write( (char*)bottom_data , sizeof( Dtype ) * this->bottom_dim_ );
+      for(int g = 0; g < this->group_; g++)
+        tvw.write( (char*)weight_data + (g * this->weight_offset_), sizeof( Dtype ) * this->weight_offset_ );
+      if( this->bias_term_ ) {
+        const Dtype* bias_data = this->blobs_[1]->cpu_data();
+        tvb.write( (char*)bias_data, sizeof( Dtype ) * this->top_dim_);
+      }
+    }
+#endif
+
     for (int n = 0; n < this->num_; ++n) {
       this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
           top_data + n * this->top_dim_);
@@ -36,7 +70,24 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         this->forward_cpu_bias(top_data + n * this->top_dim_, bias);
       }
     }
+
+#ifdef TVGEN_EN
+    {
+      // IFM data dump
+      const Dtype* top_data = top[i]->cpu_data();
+      tvo.write( (char*)top_data , sizeof( Dtype ) * this->top_dim_ );
+    }
+#endif
   }
+
+#ifdef TVGEN_EN
+  tvi.close();
+  tvw.close();
+  tvb.close();
+  tvo.close();
+#endif
+
+
 }
 
 template <typename Dtype>
