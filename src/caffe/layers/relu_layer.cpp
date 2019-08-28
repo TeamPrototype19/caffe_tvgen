@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "caffe/util/tvgen.hpp"
 #include "caffe/layers/relu_layer.hpp"
 
 namespace caffe {
@@ -8,6 +9,19 @@ namespace caffe {
 template <typename Dtype>
 void ReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+
+#ifdef TVGEN_EN
+  std::ofstream tvi, tvo;
+  string tvi_fname = "tv_" + this->layer_param().name() + "_i.dat";
+  string tvo_fname = "tv_" + this->layer_param().name() + "_o.dat";
+  tvi.open( tvi_fname.c_str(), std::ios::binary );
+  tvo.open( tvo_fname.c_str(), std::ios::binary );
+
+  tvi.write( (char*) bottom[0]->cpu_data(), sizeof(Dtype) * bottom[0]->count() );
+  tvi.close();
+#endif
+
+
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   const int count = bottom[0]->count();
@@ -16,6 +30,11 @@ void ReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     top_data[i] = std::max(bottom_data[i], Dtype(0))
         + negative_slope * std::min(bottom_data[i], Dtype(0));
   }
+
+#ifdef TVGEN_EN
+  tvo.write( (char*) top[0]->cpu_data(), sizeof(Dtype) * bottom[0]->count() );
+  tvo.close();
+#endif
 }
 
 template <typename Dtype>

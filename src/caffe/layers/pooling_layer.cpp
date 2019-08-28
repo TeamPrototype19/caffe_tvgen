@@ -2,6 +2,7 @@
 #include <cfloat>
 #include <vector>
 
+#include "caffe/util/tvgen.hpp"
 #include "caffe/layers/pooling_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
@@ -140,6 +141,20 @@ void PoolingLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+
+#ifdef TVGEN_EN
+  std::ofstream tvi, tvo;
+  string tvi_fname = "tv_" + this->layer_param().name() + "_i.dat";
+  string tvo_fname = "tv_" + this->layer_param().name() + "_o.dat";
+  tvi.open( tvi_fname.c_str(), std::ios::binary );
+  tvo.open( tvo_fname.c_str(), std::ios::binary );
+
+  int bottom_size = bottom[0]->num() * this->channels_ * this->height_ * this->width_;
+  tvi.write( (char*) bottom[0]->cpu_data(), sizeof(Dtype) * bottom_size );
+  tvi.close();
+#endif
+
+
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   const int top_count = top[0]->count();
@@ -237,6 +252,14 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   default:
     LOG(FATAL) << "Unknown pooling method.";
   }
+
+#ifdef TVGEN_EN
+  int top_size = bottom[0]->num() * this->channels_ * this->pooled_height_ * this->pooled_width_;
+  tvo.write( (char*) top[0]->cpu_data(), sizeof(Dtype) * top_size );
+  tvo.close();
+#endif
+
+
 }
 
 template <typename Dtype>
