@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "caffe/util/tvgen.hpp"
 #include "caffe/layers/softmax_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
@@ -26,6 +27,22 @@ void SoftmaxLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+
+#ifdef TVGEN_EN
+  std::ofstream tvi, tvo;
+  string tvi_fname = "tv_" + this->layer_param().name() + "_i.dat";
+  string tvo_fname = "tv_" + this->layer_param().name() + "_o.dat";
+  tvi.open( tvi_fname.c_str(), std::ios::binary );
+  tvo.open( tvo_fname.c_str(), std::ios::binary );
+  //tvi << "channel_   = " << bottom[0]->shape(softmax_axis_) << "\n";
+  //tvi << "bot.count  = " << bottom[0]->count() << "\n";
+  //tvi << "outer_num_ = " << this->outer_num_ << "\n";
+  //tvi << "inner_num_ = " << this->inner_num_ << "\n";
+  //tvi << "softmax_axis_ = " << this->softmax_axis_ << "\n";
+  tvi.write( (char*)bottom[0]->cpu_data(), sizeof( Dtype ) * bottom[0]->count() );
+  tvi.close();
+#endif
+
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   Dtype* scale_data = scale_.mutable_cpu_data();
@@ -57,6 +74,11 @@ void SoftmaxLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       top_data += inner_num_;
     }
   }
+
+#ifdef TVGEN_EN
+  tvo.write( (char*)top[0]->cpu_data(), sizeof( Dtype ) * bottom[0]->count() );
+  tvo.close();
+#endif
 }
 
 template <typename Dtype>
