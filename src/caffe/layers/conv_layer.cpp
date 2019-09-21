@@ -47,37 +47,39 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
 
+    for (int n = 0; n < this->num_; ++n) {
+
 #ifdef TVGEN_EN
-    {
-      // IFM data dump
-      const Dtype* bottom_data = bottom[i]->cpu_data();
-      const Dtype* weight_data = this->blobs_[0]->cpu_data();
-      tvi.write( (char*)bottom_data , sizeof( Dtype ) * this->bottom_dim_ );
-      for(int g = 0; g < this->group_; g++)
-        tvw.write( (char*)weight_data + (g * this->weight_offset_), sizeof( Dtype ) * this->weight_offset_ );
-      if( this->bias_term_ ) {
-        const Dtype* bias_data = this->blobs_[1]->cpu_data();
-        tvb.write( (char*)bias_data, sizeof( Dtype ) * this->top_dim_);
+      {
+        // IFM data dump
+        //const Dtype* bottom_data = bottom[i]->cpu_data();
+        const Dtype* weight_data = this->blobs_[0]->cpu_data();
+        tvi.write( (char*)(bottom_data + n * this->bottom_dim_) , sizeof( Dtype ) * this->bottom_dim_ );
+        for(int g = 0; g < this->group_; g++)
+          tvw.write( (char*)(weight_data + g * this->weight_offset_), sizeof( Dtype ) * this->weight_offset_ );
+        if( this->bias_term_ ) {
+          const Dtype* bias_data = this->blobs_[1]->cpu_data();
+          tvb.write( (char*)bias_data, sizeof( Dtype ) * this->num_output_);
+        }
       }
-    }
 #endif
 
-    for (int n = 0; n < this->num_; ++n) {
       this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
           top_data + n * this->top_dim_);
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
         this->forward_cpu_bias(top_data + n * this->top_dim_, bias);
       }
-    }
 
 #ifdef TVGEN_EN
-    {
-      // IFM data dump
-      const Dtype* top_data = top[i]->cpu_data();
-      tvo.write( (char*)top_data , sizeof( Dtype ) * this->top_dim_ );
-    }
+      {
+        // IFM data dump
+        //const Dtype* top_data = top[i]->cpu_data();
+        tvo.write( (char*)(top_data + n * this->top_dim_) , sizeof( Dtype ) * this->top_dim_ );
+      }
 #endif
+
+    }
   }
 
 #ifdef TVGEN_EN
