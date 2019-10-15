@@ -99,11 +99,11 @@ void InnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // M_: batch size
   // K_: IFM size
   // N_: OFM size
-  std::cout << "name = " << this->layer_param().name() << std::endl;
-  std::cout << "M_ = " << M_ << std::endl;
-  std::cout << "K_ = " << K_ << std::endl;
-  std::cout << "N_ = " << N_ << std::endl;
-  std::cout << "all_ = " << sizeof(Dtype) * N_ *K_*M_ << std::endl;
+  //std::cout << "name = " << this->layer_param().name() << std::endl;
+  //std::cout << "M_ = " << M_ << std::endl;
+  //std::cout << "K_ = " << K_ << std::endl;
+  //std::cout << "N_ = " << N_ << std::endl;
+  //std::cout << "all_ = " << sizeof(Dtype) * N_ *K_*M_ << std::endl;
   tvi.write( (char*)bottom[0]->cpu_data(), sizeof( Dtype ) * K_ * M_ );
   for(int i = 0; i < M_; i++) {
     tvw.write( (char*)this->blobs_[0]->cpu_data(), sizeof( Dtype ) * K_ * N_ );
