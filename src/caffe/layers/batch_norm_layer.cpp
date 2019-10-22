@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "caffe/util/tvgen.hpp"
 #include "caffe/layers/batch_norm_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
@@ -86,6 +87,41 @@ void BatchNormLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const vector<Blob<Dtype>*>& top) {
+
+#ifdef TVGEN_EN
+  std::ofstream tvi, tvv, tvm, tvs, tvo;
+  string tvi_fname = "tv_" + this->layer_param().name() + "_i.dat";
+  string tvv_fname = "tv_" + this->layer_param().name() + "_v.dat";
+  string tvm_fname = "tv_" + this->layer_param().name() + "_m.dat";
+  string tvs_fname = "tv_" + this->layer_param().name() + "_s.dat";
+  string tvo_fname = "tv_" + this->layer_param().name() + "_o.dat";
+  tvi.open( tvi_fname.c_str(), std::ios::binary );
+  tvv.open( tvv_fname.c_str(), std::ios::binary );
+  tvm.open( tvm_fname.c_str(), std::ios::binary );
+  tvs.open( tvs_fname.c_str(), std::ios::binary );
+  tvo.open( tvo_fname.c_str(), std::ios::binary );
+
+  tvi.write( (char*)(bottom[0]->cpu_data()) , sizeof( Dtype ) * bottom[0]->count());
+  tvm.write( (char*)(this->blobs_[0]->cpu_data()) , sizeof( Dtype ) * this->blobs_[0]->count());
+  tvv.write( (char*)(this->blobs_[1]->cpu_data()) , sizeof( Dtype ) * this->blobs_[1]->count());
+  tvs.write( (char*)(this->blobs_[2]->cpu_data()) , sizeof( Dtype ) * this->blobs_[2]->count());
+  /*
+  std::cout << "name = " << this->layer_param().name() << "\n";
+  std::cout << "bottom_dim_ = " << bottom[0]->count() << "\n";
+  std::cout << "top_dim     = " << top[0]->count() << "\n";
+  std::cout << "blob0.count = " << this->blobs_[0]->count() << "\n";
+  std::cout << "blob1.count = " << this->blobs_[1]->count() << "\n";
+  std::cout << "blob2.count = " << this->blobs_[2]->count() << "\n";
+  for(int i = 0; i < this->blobs_[0]->count(); i++)
+      std::cout << "blob[0] = " << this->blobs_[0]->cpu_data()[i] << "\n";
+  for(int i = 0; i < this->blobs_[1]->count(); i++)
+      std::cout << "blob[1] = " << this->blobs_[1]->cpu_data()[i] << "\n";
+  for(int i = 0; i < this->blobs_[2]->count(); i++)
+      std::cout << "blob[2] = " << this->blobs_[2]->cpu_data()[i] << "\n";
+  */
+#endif
+
+
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   int num = bottom[0]->shape(0);
@@ -163,6 +199,15 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   //                 might clobber the data.  Can we skip this if they won't?
   caffe_copy(x_norm_.count(), top_data,
       x_norm_.mutable_cpu_data());
+
+#ifdef TVGEN_EN
+  tvo.write( (char*)(top[0]->cpu_data()) , sizeof( Dtype ) * top[0]->count());
+  tvi.close();
+  tvm.close();
+  tvv.close();
+  tvs.close();
+  tvo.close();
+#endif
 }
 
 template <typename Dtype>
