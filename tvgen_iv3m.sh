@@ -1,5 +1,5 @@
 # remove tv folder
-rm -rf tv
+rm -rf tv_iv3
 
 # set PYTHONPATH to use pycaffe
 export PYTHONPATH=${PWD}/python:$PYTHONPATH
@@ -9,6 +9,6 @@ cd examples/inceptionv3
 python inference.py
 
 # move test vector to folder 'tv'
-mkdir -p tv
-mv tv_*.dat tv
-mv tv ../../
+mkdir -p tv_iv3
+mv tv_*.dat tv_iv3
+mv tv_iv3 ../../
