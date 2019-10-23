@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "caffe/util/tvgen.hpp"
 #include "caffe/filler.hpp"
 #include "caffe/layer_factory.hpp"
 #include "caffe/layers/scale_layer.hpp"
@@ -116,6 +117,27 @@ void ScaleLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ScaleLayer<Dtype>::Forward_cpu(
     const vector<Blob<Dtype>*>& bottom, const vector<Blob<Dtype>*>& top) {
+
+#ifdef TVGEN_EN
+  std::ofstream tvi, tvs, tvb, tvo;
+  string tvi_fname = "tv_" + this->layer_param().name() + "_i.dat";
+  string tvs_fname = "tv_" + this->layer_param().name() + "_s.dat";
+  string tvb_fname = "tv_" + this->layer_param().name() + "_b.dat";
+  string tvo_fname = "tv_" + this->layer_param().name() + "_o.dat";
+  tvi.open( tvi_fname.c_str(), std::ios::binary );
+  tvs.open( tvs_fname.c_str(), std::ios::binary );
+  tvb.open( tvb_fname.c_str(), std::ios::binary );
+  tvo.open( tvo_fname.c_str(), std::ios::binary );
+
+  //std::cout << "ScaleLayer::bias_bottom_vec_.size() = " << bias_bottom_vec_.size() << "\n";
+  //std::cout << "ScaleLayer::scale_dim_ = " << scale_dim_ << "\n";
+  //std::cout << "ScaleLayer::outer_dim_ = " << outer_dim_ << "\n";
+  //std::cout << "ScaleLayer::inner_dim_ = " << inner_dim_ << "\n";
+  tvi.write( (char*)(bottom[0]->cpu_data()) , sizeof( Dtype ) * bottom[0]->count() );
+#endif
+
+
+
   const Dtype* bottom_data = bottom[0]->cpu_data();
   if (bottom[0] == top[0]) {
     // In-place computation; need to store bottom data before overwriting it.
@@ -127,6 +149,12 @@ void ScaleLayer<Dtype>::Forward_cpu(
   }
   const Dtype* scale_data =
       ((bottom.size() > 1) ? bottom[1] : this->blobs_[0].get())->cpu_data();
+
+#ifdef TVGEN_EN
+  tvs.write( (char*)(scale_data) , sizeof( Dtype ) * scale_dim_ );
+  tvb.write( (char*)(bias_bottom_vec_[0]->cpu_data()) , sizeof( Dtype ) * scale_dim_ );
+#endif
+
   Dtype* top_data = top[0]->mutable_cpu_data();
   for (int n = 0; n < outer_dim_; ++n) {
     for (int d = 0; d < scale_dim_; ++d) {
@@ -139,6 +167,14 @@ void ScaleLayer<Dtype>::Forward_cpu(
   if (bias_layer_) {
     bias_layer_->Forward(bias_bottom_vec_, top);
   }
+
+#ifdef TVGEN_EN
+  tvo.write( (char*)(top[0]->cpu_data()) , sizeof( Dtype ) * top[0]->count() );
+  tvi.close();
+  tvs.close();
+  tvb.close();
+  tvo.close();
+#endif
 }
 
 template <typename Dtype>
