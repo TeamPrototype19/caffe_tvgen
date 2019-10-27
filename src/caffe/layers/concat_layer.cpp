@@ -1,5 +1,8 @@
 #include <vector>
 
+#include <sstream>
+#include <string>
+#include "caffe/util/tvgen.hpp"
 #include "caffe/layers/concat_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
@@ -56,11 +59,35 @@ void ConcatLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
 template <typename Dtype>
 void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
+
+#ifdef TVGEN_EN
+  std::ofstream tvi, tvo;
+
+  //string tvo_fname = "tv_" + this->layer_param().name() + "_o.dat";
+  //tvw.open( tvw_fname.c_str(), std::ios::binary );
+  //tvb.open( tvb_fname.c_str(), std::ios::binary );
+  //tvo.open( tvo_fname.c_str(), std::ios::binary );
+  //std::cout << "name = " << this->layer_param().name() << "\n";
+  //std::cout << "bottom.size() = " << bottom.size() << "\n";
+  //std::cout << "num_concats_  = " << num_concats_ << "\n";
+  //tvgen << "top_dim     = " << this->top_dim_ << "\n";
+#endif
+
+
   if (bottom.size() == 1) { return; }
   Dtype* top_data = top[0]->mutable_cpu_data();
   int offset_concat_axis = 0;
   const int top_concat_axis = top[0]->shape(concat_axis_);
   for (int i = 0; i < bottom.size(); ++i) {
+
+#ifdef TVGEN_EN
+    std::ostringstream stm;
+    stm << i;
+    string tvi_fname = "tv_" + this->layer_param().name() + "_i" + stm.str() + ".dat";
+    tvi.open( tvi_fname.c_str(), std::ios::binary );
+    tvi.write( (char*)bottom[i]->cpu_data(), sizeof( Dtype ) * bottom[i]->count() );
+    tvi.close();
+#endif
     const Dtype* bottom_data = bottom[i]->cpu_data();
     const int bottom_concat_axis = bottom[i]->shape(concat_axis_);
     for (int n = 0; n < num_concats_; ++n) {
@@ -71,6 +98,14 @@ void ConcatLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     }
     offset_concat_axis += bottom_concat_axis;
   }
+
+#ifdef TVGEN_EN
+    string tvo_fname = "tv_" + this->layer_param().name() + "_o.dat";
+    tvo.open( tvo_fname.c_str(), std::ios::binary );
+    tvo.write( (char*)top[0]->cpu_data(), sizeof( Dtype ) * top[0]->count() );
+    tvo.close();
+#endif
+
 }
 
 template <typename Dtype>
