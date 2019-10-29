@@ -1,0 +1,404 @@
+name: "Style_ResRBX_10"
+input: "data"
+#input_dim: 1
+#input_dim: 3
+#input_dim: 184
+#input_dim: 254
+#input_dim: 544
+#input_dim: 524
+
+input_shape {
+    dim: 1
+    dim: 3
+    dim: 256
+    dim: 256
+}
+
+layer {
+	bottom: "data"
+	top: "TR_conv1"
+	name: "TR_conv1"
+	type: "Convolution"
+	convolution_param {
+		num_output: 16
+		kernel_size: 3
+		pad: 1
+		stride: 1
+	}
+}
+layer {
+	bottom: "TR_conv1"
+	top: "TR_conv1"
+	name: "TR_bn1"
+	type: "BatchNorm"
+	batch_norm_param {
+		use_global_stats: true
+	}
+}
+layer {
+	bottom: "TR_conv1"
+	top: "TR_conv1"
+	name: "relu1"
+	type: "ReLU"
+}
+layer {
+	bottom: "TR_conv1"
+	top: "TR_conv2"
+	name: "TR_conv2"
+	type: "Convolution"
+	convolution_param {
+		num_output: 32
+		kernel_size: 3
+		pad: 1
+		stride: 1
+	}
+}
+layer {
+	bottom: "TR_conv2"
+	top: "TR_conv2"
+	name: "TR_bn2"
+	type: "BatchNorm"
+	batch_norm_param {
+		use_global_stats: true
+	}
+}
+layer {
+	bottom: "TR_conv2"
+	top: "TR_conv2"
+	name: "relu2"
+	type: "ReLU"
+}
+
+## Residual block : relu, conv, batch
+## RB1
+layer {
+	bottom: "TR_conv2"
+	top: "RB1.rb_conv1"
+	name: "RB1.rb_conv1"
+	type: "Convolution"
+	convolution_param {
+		num_output: 32
+		kernel_size: 3
+		pad: 1
+		stride: 1
+	}
+}
+layer {
+	bottom: "RB1.rb_conv1"
+	top: "RB1.rb_conv1"
+	name: "RB1.rb_bn1"
+	type: "BatchNorm"
+	batch_norm_param {
+		use_global_stats: true
+	}
+}
+layer {
+	bottom: "RB1.rb_conv1"
+	top: "RB1.rb_conv1"
+	name: "RB1.rb_relu"
+	type: "ReLU"
+}
+layer {
+	bottom: "RB1.rb_conv1"
+	top: "RB1.rb_conv2"
+	name: "RB1.rb_conv2"
+	type: "Convolution"
+	convolution_param {
+		num_output: 32
+		kernel_size: 3
+		pad: 1
+		stride: 1
+	}
+}
+layer {
+	bottom: "RB1.rb_conv2"
+	top: "RB1.rb_conv2"
+	name: "RB1.rb_bn2"
+	type: "BatchNorm"
+	batch_norm_param {
+		use_global_stats: true
+	}
+}
+layer {
+  name: "RB1.out"
+  type: "Eltwise"
+  bottom: "TR_conv2"
+  bottom: "RB1.rb_conv2"
+  top: "RB1.out"
+}
+## RB2
+layer {
+	bottom: "RB1.out"
+	top: "RB2.rb_conv1"
+	name: "RB2.rb_conv1"
+	type: "Convolution"
+	convolution_param {
+		num_output: 32
+		kernel_size: 3
+		pad: 1
+		stride: 1
+	}
+}
+layer {
+	bottom: "RB2.rb_conv1"
+	top: "RB2.rb_conv1"
+	name: "RB2.rb_bn1"
+	type: "BatchNorm"
+	batch_norm_param {
+		use_global_stats: true
+	}
+}
+layer {
+	bottom: "RB2.rb_conv1"
+	top: "RB2.rb_conv1"
+	name: "RB2.rb_relu"
+	type: "ReLU"
+}
+layer {
+	bottom: "RB2.rb_conv1"
+	top: "RB2.rb_conv2"
+	name: "RB2.rb_conv2"
+	type: "Convolution"
+	convolution_param {
+		num_output: 32
+		kernel_size: 3
+		pad: 1
+		stride: 1
+	}
+}
+layer {
+	bottom: "RB2.rb_conv2"
+	top: "RB2.rb_conv2"
+	name: "RB2.rb_bn2"
+	type: "BatchNorm"
+	batch_norm_param {
+		use_global_stats: true
+	}
+}
+layer {
+  name: "RB2.out"
+  type: "Eltwise"
+  bottom: "RB2.rb_conv2"
+  bottom: "RB1.out"
+  top: "RB2.out"
+}
+## RB3
+layer {
+	bottom: "RB2.out"
+	top: "RB3.rb_conv1"
+	name: "RB3.rb_conv1"
+	type: "Convolution"
+	convolution_param {
+		num_output: 32
+		kernel_size: 3
+		pad: 1
+		stride: 1
+	}
+}
+layer {
+	bottom: "RB3.rb_conv1"
+	top: "RB3.rb_conv1"
+	name: "RB3.rb_bn1"
+	type: "BatchNorm"
+	batch_norm_param {
+		use_global_stats: true
+	}
+}
+layer {
+	bottom: "RB3.rb_conv1"
+	top: "RB3.rb_conv1"
+	name: "RB3.rb_relu"
+	type: "ReLU"
+}
+layer {
+	bottom: "RB3.rb_conv1"
+	top: "RB3.rb_conv2"
+	name: "RB3.rb_conv2"
+	type: "Convolution"
+	convolution_param {
+		num_output: 32
+		kernel_size: 3
+		pad: 1
+		stride: 1
+	}
+}
+layer {
+	bottom: "RB3.rb_conv2"
+	top: "RB3.rb_conv2"
+	name: "RB3.rb_bn2"
+	type: "BatchNorm"
+	batch_norm_param {
+		use_global_stats: true
+	}
+}
+layer {
+  name: "RB3.out"
+  type: "Eltwise"
+  bottom: "RB3.rb_conv2"
+  bottom: "RB2.out"
+  top: "RB3.out"
+}
+## RB4
+layer {
+	bottom: "RB3.out"
+	top: "RB4.rb_conv1"
+	name: "RB4.rb_conv1"
+	type: "Convolution"
+	convolution_param {
+		num_output: 32
+		kernel_size: 3
+		pad: 1
+		stride: 1
+	}
+}
+layer {
+	bottom: "RB4.rb_conv1"
+	top: "RB4.rb_conv1"
+	name: "RB4.rb_bn1"
+	type: "BatchNorm"
+	batch_norm_param {
+		use_global_stats: true
+	}
+}
+layer {
+	bottom: "RB4.rb_conv1"
+	top: "RB4.rb_conv1"
+	name: "RB4.rb_relu"
+	type: "ReLU"
+}
+layer {
+	bottom: "RB4.rb_conv1"
+	top: "RB4.rb_conv2"
+	name: "RB4.rb_conv2"
+	type: "Convolution"
+	convolution_param {
+		num_output: 32
+		kernel_size: 3
+		pad: 1
+		stride: 1
+	}
+}
+layer {
+	bottom: "RB4.rb_conv2"
+	top: "RB4.rb_conv2"
+	name: "RB4.rb_bn2"
+	type: "BatchNorm"
+	batch_norm_param {
+		use_global_stats: true
+	}
+}
+layer {
+  name: "RB4.out"
+  type: "Eltwise"
+  bottom: "RB4.rb_conv2"
+  bottom: "RB3.out"
+  top: "RB4.out"
+}
+## RB5
+layer {
+	bottom: "RB4.out"
+	top: "RB5.rb_conv1"
+	name: "RB5.rb_conv1"
+	type: "Convolution"
+	convolution_param {
+		num_output: 32
+		kernel_size: 3
+		pad: 1
+		stride: 1
+	}
+}
+layer {
+	bottom: "RB5.rb_conv1"
+	top: "RB5.rb_conv1"
+	name: "RB5.rb_bn1"
+	type: "BatchNorm"
+	batch_norm_param {
+		use_global_stats: true
+	}
+}
+layer {
+	bottom: "RB5.rb_conv1"
+	top: "RB5.rb_conv1"
+	name: "RB5.rb_relu"
+	type: "ReLU"
+}
+layer {
+	bottom: "RB5.rb_conv1"
+	top: "RB5.rb_conv2"
+	name: "RB5.rb_conv2"
+	type: "Convolution"
+	convolution_param {
+		num_output: 32
+		kernel_size: 3
+		pad: 1
+		stride: 1
+	}
+}
+layer {
+	bottom: "RB5.rb_conv2"
+	top: "RB5.rb_conv2"
+	name: "RB5.rb_bn2"
+	type: "BatchNorm"
+	batch_norm_param {
+		use_global_stats: true
+	}
+}
+layer {
+  name: "RB5.out"
+  type: "Eltwise"
+  bottom: "RB5.rb_conv2"
+  bottom: "RB4.out"
+  top: "RB5.out"
+}
+
+## Reconstruction
+layer {
+	bottom: "RB5.out"
+	top: "RE_conv1"
+	name: "RE_conv1"
+	type: "Convolution"
+	convolution_param {
+		num_output: 16
+		kernel_size: 3
+		pad: 1
+		stride: 1
+	}
+}
+layer {
+	bottom: "RE_conv1"
+	top: "RE_conv1"
+	name: "RE_bn1"
+	type: "BatchNorm"
+	batch_norm_param {
+		use_global_stats: true
+	}
+}
+layer {
+	bottom: "RE_conv1"
+	top: "RE_conv1"
+	name: "RE_relu1"
+	type: "ReLU"
+}
+layer {
+	bottom: "RE_conv1"
+	top: "RE_conv2"
+	name: "RE_conv2"
+	type: "Convolution"
+	convolution_param {
+		num_output: 3
+		kernel_size: 3
+		pad: 1
+		stride: 1
+	}
+}
+layer{
+  name: "scale255"
+	bottom: "RE_conv2"
+	top:"scale255"
+	type: "Scale"
+  scale_param{
+    filler{
+		    value: 255}
+  	bias_term: false
+	}
+}
